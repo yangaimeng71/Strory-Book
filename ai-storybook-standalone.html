@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🎨 AI绘本 - 儿童故事生成器</title>
+    <meta name="description" content="为3-8岁儿童设计的AI绘本创作工具，支持故事生成、插画配图和语音朗读">
+    <meta name="keywords" content="AI绘本,儿童故事,语音朗读,移动端,教育">
+    
+    <!-- 添加PWA支持 -->
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQUnnu5jmnKwiLCJzaG9ydF9uYW1lIjoiQUnnu5jmnKwiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJ0aGVtZV9jb2xvciI6IiM2NjdlZWEiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2ZmZmZmZiIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBNU5pQTVOaUlnZG1WeWMybHZiajBpTVM0eElpQjRiV3h1Y3owaWFIUjBjRG92TDNkM2R5NTNNeTVoY21jdk1qQXdNQzl6ZG1jaVBnbzhZMmx5WTJ4bElHTjRQU0kwT0NJZ1kza1BTSDBPV0NJZ2NqMGlNemt1TmlJZ1ptbHNiRDBpSXpZMk4yVmxZU0lnTHo0OGRHVjRkQ0I0UFNJek5pSWdlVDBpTlRRaUlHWnZiblF0Wm1GdGFXeDVQU0pCY21saGJDSWdabTl1ZEMxemFYcGxQU0l6TUhCNElpQm1hV3hzUFNJalptWm1JaUErOEFvZ1FVa080NGEvYStlN21PZStpVGdnUEM5MFpYaDBQZzhMM04yWnoiLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XX0=">
+    
+    <style>
+        /* 基础样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        /* 页面容器 */
+        .page {
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-y: auto;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 首页样式 */
+        #homePage {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: -10px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: pulse 3s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .settings-btn:hover, .settings-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        .logo {
+            font-size: 2.8rem;
+            color: #fff;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            margin-bottom: 15px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: #fff;
+            font-size: 1.1rem;
+            opacity: 0.95;
+            font-weight: 300;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .input-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 35px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+
+        .input-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .input-section h2 {
+            color: #5a67d8;
+            margin-bottom: 25px;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        #storyInput {
+            width: 100%;
+            padding: 18px 24px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 1.05rem;
+            margin-bottom: 25px;
+            background: #fff;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        #storyInput:focus {
+            outline: none;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25);
+        }
+
+        .primary-btn {
+            width: 100%;
+            padding: 18px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+            font-family: inherit;
+        }
+
+        .primary-btn:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .primary-btn:hover:before {
+            left: 100%;
+        }
+
+        .primary-btn:hover, .primary-btn:active {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .preset-themes {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(15px);
+        }
+
+        .preset-themes h3 {
+            color: #5a67d8;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .theme-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .theme-tag {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 28px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-tag:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .theme-tag:hover:before {
+            left: 100%;
+        }
+
+        .theme-tag:hover, .theme-tag:active {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 154, 158, 0.4);
+        }
+
+        /* 加载页样式 */
+        #loadingPage {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .loading-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 45px 35px;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .magic-wand {
+            font-size: 3.5rem;
+            animation: sparkle 2s ease-in-out infinite;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .magic-wand:after {
+            content: '✨';
+            position: absolute;
+            top: -10px;
+            right: -15px;
+            font-size: 1.5rem;
+            animation: twinkle 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(12deg) scale(1.1); }
+            75% { transform: rotate(-12deg) scale(1.1); }
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.5; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .loading-text {
+            font-size: 1.3rem;
+            color: #5a67d8;
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+
+        .loading-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .step {
+            padding: 14px 22px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            color: #5a67d8;
+            font-weight: 600;
+            opacity: 0.6;
+            transition: all 0.4s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .step.active {
+            opacity: 1;
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateX(8px);
+            border-left-color: #667eea;
+        }
+
+        /* 故事阅读页样式 */
+        #storyPage {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 0;
+        }
+
+        .story-header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .icon-btn {
+            background: rgba(90, 103, 216, 0.1);
+            border: none;
+            font-size: 1.8rem;
+            color: #5a67d8;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .icon-btn:hover, .icon-btn:active {
+            background: rgba(90, 103, 216, 0.2);
+            transform: scale(1.1);
+        }
+
+        #storyTitle {
+            font-size: 1.3rem;
+            color: #5a67d8;
+            font-weight: 700;
+            text-align: center;
+            flex: 1;
+            margin: 0 20px;
+        }
+
+        .page-indicator {
+            font-size: 1rem;
+            color: #667eea;
+            font-weight: 600;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 8px 12px;
+            border-radius: 20px;
+        }
+
+        .story-content {
+            flex: 1;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .story-image {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+            aspect-ratio: 4/3;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(45deg, #f0f2f5 25%, #e2e8f0 50%, #f0f2f5 75%);
+            background-size: 400% 400%;
+            animation: shimmer 2s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .story-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 20px;
+            transition: all 0.5s ease-in-out;
+        }
+
+        .image-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid rgba(102, 126, 234, 0.2);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .image-loading p {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .story-text {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px 25px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(15px);
+        }
+
+        #storyParagraph {
+            font-size: 1.15rem;
+            line-height: 1.9;
+            color: #4a5568;
+            text-align: justify;
+            font-weight: 400;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            padding: 3px 6px;
+            border-radius: 6px;
+            animation: glow 1s ease-in-out infinite alternate;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(168, 237, 234, 0.4);
+        }
+
+        @keyframes glow {
+            0% { opacity: 0.8; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.02); }
+        }
+
+        .control-bar {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 18px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            min-width: 85px;
+            position: relative;
+            overflow: hidden;
+            font-family: inherit;
+        }
+
+        .nav-btn:disabled {
+            background: #e2e8f0;
+            color: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .nav-btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .play-btn {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 20px rgba(255, 154, 158, 0.3);
+        }
+
+        .play-btn:hover, .play-btn:active {
+            transform: scale(1.15);
+            box-shadow: 0 8px 30px rgba(255, 154, 158, 0.5);
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: #5a67d8;
+            font-weight: 600;
+        }
+
+        #speedSelect {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            background: white;
+            color: #4a5568;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #speedSelect:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* 结束页样式 */
+        #endPage {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .end-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 45px 35px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(20px);
+            max-width: 420px;
+            width: 100%;
+        }
+
+        .celebration {
+            font-size: 4.5rem;
+            animation: bounce 2s ease-in-out infinite;
+            margin-bottom: 25px;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-25px); }
+            60% { transform: translateY(-12px); }
+        }
+
+        .end-container h2 {
+            color: #5a67d8;
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .end-container p {
+            color: #667eea;
+            font-size: 1.05rem;
+            margin-bottom: 35px;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .end-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .secondary-btn {
+            background: rgba(102, 126, 234, 0.1);
+            color: #5a67d8;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 14px;
+            padding: 14px 24px;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-weight: 600;
+            font-family: inherit;
+        }
+
+        .secondary-btn:hover, .secondary-btn:active {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+        }
+
+        /* Toast提示 */
+        .toast {
+            position: fixed;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            z-index: 1001;
+            opacity: 0;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-weight: 600;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(15px);
+        }
+
+        /* 隐藏其他页面 */
+        .page:not(#homePage) {
+            display: none;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .page { padding: 18px; }
+            .logo { font-size: 2.3rem; }
+            .input-section { padding: 28px 22px; }
+            .preset-themes { padding: 25px; }
+            .story-content { padding: 18px; }
+            .control-bar { padding: 20px; gap: 15px; }
+            .nav-btn { padding: 12px 15px; font-size: 0.85rem; min-width: 75px; }
+            .play-btn { width: 50px; height: 50px; font-size: 1.1rem; }
+            .audio-controls { gap: 15px; }
+        }
+
+        @media (max-width: 360px) {
+            .theme-tags { gap: 10px; }
+            .theme-tag { padding: 10px 14px; font-size: 0.85rem; }
+            .control-bar { 
+                flex-direction: column; 
+                gap: 18px; 
+                padding: 18px;
+            }
+            .nav-btn { 
+                width: 100%; 
+                justify-content: center;
+                min-width: unset;
+            }
+            .audio-controls {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* 平板横屏优化 */
+        @media (min-width: 768px) and (orientation: landscape) {
+            .story-content {
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 35px;
+            }
+            
+            .story-image {
+                flex: 1;
+                max-width: none;
+            }
+            
+            .story-text {
+                flex: 1;
+            }
+        }
+
+        /* 大屏幕优化 */
+        @media (min-width: 1024px) {
+            .page {
+                max-width: 650px;
+                margin: 0 auto;
+            }
+            
+            body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+            }
+        }
+
+        /* 深色主题支持 */
+        @media (prefers-color-scheme: dark) {
+            .input-section,
+            .preset-themes,
+            .loading-container,
+            .story-text,
+            .control-bar,
+            .end-container {
+                background: rgba(45, 55, 72, 0.95);
+                color: #e2e8f0;
+            }
+            
+            .input-section h2,
+            .preset-themes h3,
+            .loading-text,
+            #storyTitle,
+            .end-container h2 {
+                color: #90cdf4;
+            }
+            
+            #storyInput,
+            #speedSelect {
+                background: rgba(26, 32, 44, 0.8);
+                color: #e2e8f0;
+                border-color: #4a5568;
+            }
+        }
+
+        /* 打印样式 */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            
+            .page {
+                background: white !important;
+                box-shadow: none;
+            }
+            
+            .control-bar,
+            .settings-btn {
+                display: none;
+            }
+        }
+
+        /* 高对比度模式 */
+        @media (prefers-contrast: high) {
+            .primary-btn,
+            .nav-btn {
+                background: #000;
+                border: 2px solid #fff;
+            }
+            
+            .theme-tag {
+                background: #000;
+                border: 2px solid #fff;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 首页 -->
+    <div class="page" id="homePage">
+        <div class="header">
+            <button id="settingsBtn" class="settings-btn" title="设置">⚙️</button>
+            <h1 class="logo">🎨 AI绘本</h1>
+            <p class="subtitle">为孩子创造无限想象的故事世界</p>
+        </div>
+        
+        <div class="input-section">
+            <h2>告诉我你想听什么故事？</h2>
+            <input type="text" id="storyInput" placeholder="例如：勇敢的小兔子" maxlength="50" autocomplete="off">
+            <button id="generateBtn" class="primary-btn" title="开始创作故事">
+                ✨ 开始创作故事
+            </button>
+        </div>
+        
+        <div class="preset-themes">
+            <h3>或者选择一个主题：</h3>
+            <div class="theme-tags">
+                <span class="theme-tag" data-theme="勇敢的小动物" title="点击选择">🐰 勇敢小动物</span>
+                <span class="theme-tag" data-theme="神奇的森林" title="点击选择">🌲 神奇森林</span>
+                <span class="theme-tag" data-theme="友谊的力量" title="点击选择">👫 友谊故事</span>
+                <span class="theme-tag" data-theme="奇妙的海底世界" title="点击选择">🐠 海底世界</span>
+                <span class="theme-tag" data-theme="太空大冒险" title="点击选择">🚀 太空冒险</span>
+                <span class="theme-tag" data-theme="善良的小公主" title="点击选择">👸 童话公主</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 加载页 -->
+    <div class="page" id="loadingPage">
+        <div class="loading-container">
+            <div class="magic-wand" role="img" aria-label="魔法棒">✨</div>
+            <div class="loading-text">AI正在为你创作故事...</div>
+            <div class="loading-steps">
+                <div class="step" id="step1">📝 构思故事情节</div>
+                <div class="step" id="step2">🎨 绘制精美插画</div>
+                <div class="step" id="step3">🎵 准备语音朗读</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 故事阅读页 -->
+    <div class="page" id="storyPage">
+        <div class="story-header">
+            <button id="backBtn" class="icon-btn" title="返回首页" aria-label="返回首页">←</button>
+            <h2 id="storyTitle">故事标题</h2>
+            <div class="page-indicator" role="status" aria-live="polite">
+                <span id="currentPage">1</span> / <span id="totalPages">1</span>
+            </div>
+        </div>
+        
+        <div class="story-content">
+            <div class="story-image">
+                <img id="storyImg" src="" alt="故事插画" style="display: none;">
+                <div class="image-loading" id="imageLoading" role="status" aria-live="polite">
+                    <div class="spinner" aria-label="加载中"></div>
+                    <p>正在绘制插画...</p>
+                </div>
+            </div>
+            
+            <div class="story-text">
+                <p id="storyParagraph" role="main"></p>
+            </div>
+        </div>
+        
+        <div class="control-bar" role="toolbar" aria-label="故事控制">
+            <button id="prevBtn" class="nav-btn" disabled title="上一页" aria-label="上一页">
+                ← 上一页
+            </button>
+            
+            <div class="audio-controls">
+                <button id="playBtn" class="play-btn" title="播放/暂停" aria-label="播放朗读">▶️</button>
+                <div class="speed-control">
+                    <label for="speedSelect">语速:</label>
+                    <select id="speedSelect" title="选择朗读语速">
+                        <option value="0.8">慢</option>
+                        <option value="1.0" selected>正常</option>
+                        <option value="1.2">快</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button id="nextBtn" class="nav-btn" title="下一页" aria-label="下一页">
+                下一页 →
+            </button>
+        </div>
+    </div>
+    
+    <!-- 结束页 -->
+    <div class="page" id="endPage">
+        <div class="end-container">
+            <div class="celebration" role="img" aria-label="庆祝">🎉</div>
+            <h2>故事结束啦！</h2>
+            <p>希望你喜欢这个美妙的故事～</p>
+            
+            <div class="end-actions">
+                <button id="newStoryBtn" class="primary-btn" title="创作新故事">
+                    ✨ 再来一个故事
+                </button>
+                <button id="saveStoryBtn" class="secondary-btn" title="保存到本地">
+                    📖 保存故事
+                </button>
+                <button id="shareStoryBtn" class="secondary-btn" title="分享给朋友">
+                    📤 分享绘本
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast提示 -->
+    <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+    
+    <script>
+        'use strict';
+
+        // AI绘本应用主类
+        class StoryApp {
+            constructor() {
+                this.currentStory = null;
+                this.currentPageIndex = 0;
+                this.isPlaying = false;
+                this.speechSynthesis = window.speechSynthesis;
+                this.currentUtterance = null;
+                this.highlightTimeout = null;
+                this.loadingInterval = null;
+                
+                this.init();
+            }
+
+            init() {
+                console.log('🎨 AI绘本应用启动 v2.0');
+                try {
+                    this.bindEvents();
+                    this.showPage('homePage');
+                    this.showToast('✨ 欢迎使用AI绘本！点击主题开始创作');
+                    this.preloadVoices();
+                } catch (error) {
+                    console.error('❌ 应用初始化失败:', error);
+                    this.showToast('应用加载出错，请刷新页面重试');
+                }
+            }
+
+            preloadVoices() {
+                // 预加载语音合成器
+                if (this.speechSynthesis) {
+                    this.speechSynthesis.getVoices();
+                    this.speechSynthesis.onvoiceschanged = () => {
+                        console.log('🎵 语音库加载完成');
+                    };
+                }
+            }
+
+            bindEvents() {
+                // 首页事件
+                const generateBtn = document.getElementById('generateBtn');
+                const storyInput = document.getElementById('storyInput');
+                
+                if (generateBtn) {
+                    generateBtn.addEventListener('click', () => this.generateStory());
+                }
+
+                if (storyInput) {
+                    storyInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            this.generateStory();
+                        }
+                    });
+
+                    // 自动聚焦输入框
+                    storyInput.addEventListener('focus', () => {
+                        storyInput.select();
+                    });
+                }
+
+                // 主题标签点击
+                document.querySelectorAll('.theme-tag').forEach(tag => {
+                    tag.addEventListener('click', () => {
+                        const theme = tag.dataset.theme;
+                        if (storyInput) storyInput.value = theme;
+                        this.generateStory();
+                    });
+                });
+
+                // 故事页面事件
+                const backBtn = document.getElementById('backBtn');
+                if (backBtn) {
+                    backBtn.addEventListener('click', () => this.goHome());
+                }
+
+                const prevBtn = document.getElementById('prevBtn');
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', () => this.previousPage());
+                }
+
+                const nextBtn = document.getElementById('nextBtn');
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', () => this.nextPage());
+                }
+
+                const playBtn = document.getElementById('playBtn');
+                if (playBtn) {
+                    playBtn.addEventListener('click', () => this.togglePlayback());
+                }
+
+                const speedSelect = document.getElementById('speedSelect');
+                if (speedSelect) {
+                    speedSelect.addEventListener('change', () => this.stopPlayback());
+                }
+
+                // 结束页面事件
+                const newStoryBtn = document.getElementById('newStoryBtn');
+                if (newStoryBtn) {
+                    newStoryBtn.addEventListener('click', () => this.goHome());
+                }
+
+                const saveStoryBtn = document.getElementById('saveStoryBtn');
+                if (saveStoryBtn) {
+                    saveStoryBtn.addEventListener('click', () => this.saveStory());
+                }
+
+                const shareStoryBtn = document.getElementById('shareStoryBtn');
+                if (shareStoryBtn) {
+                    shareStoryBtn.addEventListener('click', () => this.shareStory());
+                }
+
+                // 设置按钮
+                const settingsBtn = document.getElementById('settingsBtn');
+                if (settingsBtn) {
+                    settingsBtn.addEventListener('click', () => {
+                        this.showToast('💡 提示：使用不同主题词可以生成不同类型的故事');
+                    });
+                }
+
+                // 键盘快捷键
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        this.stopPlayback();
+                    }
+                });
+
+                console.log('✅ 所有事件监听器已绑定');
+            }
+
+            async generateStory() {
+                const storyInput = document.getElementById('storyInput');
+                const input = storyInput ? storyInput.value.trim() : '';
+                
+                if (!input) {
+                    this.showToast('❗ 请输入故事主题或选择一个预设主题');
+                    if (storyInput) storyInput.focus();
+                    return;
+                }
+
+                console.log('🚀 开始生成故事:', input);
+                this.showPage('loadingPage');
+                this.animateLoadingSteps();
+
+                try {
+                    // 生成故事内容
+                    const story = await this.createStory(input);
+                    this.currentStory = story;
+                    this.currentPageIndex = 0;
+
+                    // 生成插画
+                    await this.generateImages(story);
+
+                    this.showStoryPage();
+                    console.log('✨ 故事生成完成:', story.title);
+                    this.showToast('🎉 故事创作完成！可以开始阅读了');
+                } catch (error) {
+                    console.error('❌ 生成故事失败:', error);
+                    this.showToast('😔 故事生成失败，请重试');
+                    this.showPage('homePage');
+                }
+            }
+
+            async createStory(theme) {
+                // 预定义故事模板
+                const storyTemplates = {
+                    '勇敢的小动物': {
+                        title: '勇敢的小兔子贝贝',
+                        paragraphs: [
+                            '在一片美丽的森林里，住着一只名叫贝贝的小兔子。贝贝有着雪白的毛发和红宝石般的眼睛，但她总是很胆小，不敢独自出门探险。每当其他小动物邀请她一起玩耍时，贝贝总是摇摇头，躲在妈妈身后。',
+                            '一天，森林里传来了急促的求救声。原来是小松鼠奇奇在采松果时不小心掉进了深深的山洞里，大家都围在洞口却不知道该怎么办。动物们焦急地讨论着救援方案，但洞口太小太深，大家都进不去。',
+                            '贝贝看到大家都很着急，心里也很难过。虽然她很害怕黑暗的洞穴，但她想起了妈妈曾经说过的话："真正的勇敢不是不害怕，而是即使害怕也要去帮助需要帮助的人。"这句话给了贝贝巨大的勇气。',
+                            '贝贝深深吸了一口气，鼓起勇气对大家说："让我试试吧！"然后她小心翼翼地跳进了山洞。洞里很黑很冷，贝贝的心怦怦直跳，但她想着奇奇需要帮助，就一步一步勇敢地往下走，用她的小爪子摸索着前进。',
+                            '终于，贝贝在洞底找到了受伤哭泣的奇奇。她温柔地安慰奇奇："别怕，我来救你了！"然后她用自己柔软的毛发为奇奇保暖，并想办法背着他慢慢爬出了山洞。当大家看到贝贝安全地救出奇奇时，都为她鼓掌喝彩。',
+                            '从那天起，贝贝再也不是那只胆小的小兔子了。她学会了勇敢，也明白了帮助别人会让自己变得更加强大和快乐。森林里的小动物们都很佩服贝贝，她也成为了大家最好的朋友。勇敢的贝贝告诉我们：每个人心中都有一颗勇敢的种子，只要我们愿意去帮助别人，这颗种子就会发芽成长。'
+                        ]
+                    },
+                    '神奇的森林': {
+                        title: '神奇森林的秘密',
+                        paragraphs: [
+                            '在遥远的山谷深处，有一片神奇的森林，这里的树木会发出温暖的光芒，花朵会唱出美妙的歌声，蝴蝶的翅膀像彩虹一样绚烂多彩。小女孩莉莉在一次迷路时偶然发现了这个奇妙的地方，她被眼前的美景深深震撼了。',
+                            '莉莉走进森林深处，遇到了一只会说话的小鹿。小鹿用温柔的声音告诉她，这片森林正面临着巨大的危险，邪恶的黑暗巫师想要夺走森林的魔法力量，让所有美好的东西都消失不见，变成一片死寂的荒地。',
+                            '善良的莉莉听了非常难过，她决定帮助森林度过这个危机。小鹿带她去见森林里最智慧的老树爷爷，老树爷爷用苍老却坚定的声音告诉她，只有集齐三颗不同颜色的魔法宝石，才能形成保护森林的强大魔法屏障。',
+                            '莉莉开始了寻找魔法宝石的冒险之旅。她帮助迷路的小鸟找到回家的路，小鸟感动地送给她一颗蓝色的友善宝石；她救助了被荆棘缠住的小狐狸，小狐狸感激地赠送给她一颗红色的爱心宝石。每一次善行都让莉莉的心更加温暖。',
+                            '最后一颗绿色的勇气宝石藏在最危险的黑暗山谷里，那里有巫师设下的重重机关。莉莉虽然心里很害怕，但想到森林里所有可爱的朋友们，她鼓起勇气，凭借智慧和坚持，终于成功取得了最后一颗宝石。',
+                            '当三颗魔法宝石聚集在一起时，它们发出了耀眼的彩色光芒，形成了一道强大的保护屏障，成功驱走了邪恶的黑暗巫师。森林重新恢复了往日的美丽和生机，所有的动物和植物都感谢莉莉的勇敢和善良。从此以后，莉莉成为了森林的守护者，她明白了善良和勇敢的力量是世界上最珍贵的魔法。'
+                        ]
+                    },
+                    '友谊的力量': {
+                        title: '最好的朋友',
+                        paragraphs: [
+                            '在一片绿意盎然的森林里，小熊波波和小兔跳跳是最好最好的朋友。他们每天一起在草地上玩耍，一起分享美味的蜂蜜和胡萝卜，一起在树荫下听鸟儿唱歌。森林里的其他小动物都非常羡慕他们深厚的友谊，认为他们是世界上最幸福的一对好朋友。',
+                            '有一天，森林里来了一只新朋友——聪明活泼的小猴子皮皮。皮皮会很多有趣的游戏和魔术，还会讲许多精彩的冒险故事。波波很快就被皮皮的才华吸引了，开始花越来越多的时间和皮皮一起玩耍，学习新的技能。',
+                            '跳跳看到波波和皮皮玩得那么开心，心里开始感到孤单和嫉妒。她觉得波波不再像以前那样喜欢和她在一起了，担心皮皮会抢走她最好的朋友。于是跳跳开始疏远波波，甚至对新来的皮皮也表现出不友好的态度，心情变得越来越沮丧。',
+                            '敏感的波波很快注意到了跳跳的变化，他的心里也变得很困惑和难过。经过深思熟虑后，波波主动找到了跳跳，诚恳地对她说："跳跳，你永远是我最珍贵的朋友，这一点永远不会改变。我希望我们三个都能成为好朋友，一起分享更多的快乐时光。"',
+                            '听了波波真诚的话语，跳跳意识到自己的想法是错误的。她主动找到皮皮，为自己之前的冷淡态度道歉，并真心邀请皮皮加入他们的游戏。皮皮也很高兴能够和跳跳成为朋友，三个小动物很快就成为了最好的朋友组合。',
+                            '从那以后，波波、跳跳和皮皮成为了森林里最快乐的三人小团体。他们一起探险、一起学习、一起成长。通过这次经历，他们都明白了一个重要的道理：真正的友谊不是独占和排斥，而是包容和分享；不是嫉妒和竞争，而是理解和支持。友谊的力量在于让每个人都变得更好，让世界变得更加美好。'
+                        ]
+                    },
+                    '奇妙的海底世界': {
+                        title: '小海豚的大冒险',
+                        paragraphs: [
+                            '在深蓝深蓝的大海里，住着一只活泼可爱的小海豚朵朵。朵朵有着银白色的光滑皮肤和亮晶晶的大眼睛，她最喜欢和海洋朋友们一起在珊瑚礁间游来游去，探索海底世界的奇妙秘密。',
+                            '一天，朵朵听说海洋深处有一颗能实现愿望的神奇珍珠，但是要找到它需要通过三个挑战。勇敢的朵朵决定踏上这段冒险旅程，她想要许愿让所有海洋生物都能快乐地生活在一起。',
+                            '第一个挑战是要帮助迷路的小鱼群找到回家的路。朵朵用她敏锐的声呐定位能力，引导着小鱼们穿过危险的海沟，安全回到了它们温暖的家。小鱼们感激地送给朵朵一片闪亮的鳞片作为礼物。',
+                            '第二个挑战更加困难，朵朵需要劝服脾气暴躁的章鱼先生不要欺负其他小动物。朵朵用耐心和智慧与章鱼先生交流，了解到他其实很孤独。朵朵邀请章鱼先生加入她的朋友圈，章鱼先生从此变得友善起来。',
+                            '最后的挑战是要在黑暗的海底洞穴中找到神奇珍珠。朵朵克服了对黑暗的恐惧，凭借着勇气和之前获得的帮助，终于找到了那颗发着温柔光芒的珍珠。',
+                            '当朵朵许下"让所有海洋生物和谐共处"的愿望时，整个海洋都被温暖的光芒包围了。从那以后，海底世界变得更加美丽和谐，所有的生物都成为了朋友。朵朵也明白了，最神奇的魔法其实就是爱心和友善。'
+                        ]
+                    },
+                    '太空大冒险': {
+                        title: '小星星的宇宙之旅',
+                        paragraphs: [
+                            '在遥远的银河系边缘，有一颗名叫闪闪的小星星，她一直梦想着能够环游整个宇宙，看看其他星球上的奇妙景象。虽然她还很年轻，光芒也不够明亮，但她有一颗勇敢探索的心。',
+                            '一天，闪闪遇到了一艘迷路的太空船，船上的小宇航员阿强正在寻找回地球的路。闪闪决定帮助阿强，他们一起踏上了穿越宇宙的奇妙旅程，见证了许多从未见过的美丽景象。',
+                            '在旅途中，他们经过了彩虹星球，那里的一切都是五颜六色的；飞过了音乐星球，整个星球都在演奏着美妙的交响乐；还拜访了糖果星球，那里的山脉都是用巧克力做成的，河流都是甜甜的果汁。',
+                            '但是旅途并不总是顺利的，他们遇到了太空风暴，还差点被黑洞吸走。关键时刻，闪闪发现了自己内心深处的光芒，她努力让自己发光发热，为阿强指引了正确的方向。',
+                            '经过许多冒险，闪闪和阿强终于找到了回地球的路。在这个过程中，闪闪不仅帮助了朋友，也发现了自己的价值和力量。她明白了，每颗星星都有自己独特的光芒和使命。',
+                            '当阿强安全回到地球时，他向所有人讲述了小星星闪闪的勇敢故事。从那以后，闪闪成为了宇宙中最受尊敬的导航星，用自己的光芒为所有迷路的旅行者指引回家的方向。'
+                        ]
+                    },
+                    '善良的小公主': {
+                        title: '玫瑰公主的魔法花园',
+                        paragraphs: [
+                            '在一个美丽的王国里，住着一位心地善良的小公主，大家都叫她玫瑰公主。她有着金色的卷发和温暖的笑容，但最特别的是她拥有一座神奇的花园，那里种着世界上最美的花朵。',
+                            '玫瑰公主的花园有一个秘密：只要公主对花朵们说出善良的话语，花朵们就会绽放得更加美丽，散发出治愈人心的香气。公主每天都会在花园里和花朵们聊天，告诉它们关于善良和爱的故事。',
+                            '有一天，邻国来了一位生病的小王子，任何药物都无法治愈他的疾病，他变得越来越虚弱。玫瑰公主听说后，决定用自己花园里的魔法花朵来帮助小王子恢复健康。',
+                            '公主精心挑选了最美丽的玫瑰花，用它们制作了一瓶充满爱心的花露。当小王子闻到这神奇花露的香气时，他苍白的脸颊开始泛起红晕，身体也渐渐恢复了力量。',
+                            '小王子康复后，他问公主花朵为什么会有这样神奇的魔法。玫瑰公主温柔地告诉他："真正的魔法不在于花朵，而在于我们心中的善良和爱。当我们真心关怀别人时，就能创造出最美好的奇迹。"',
+                            '从那以后，两个王国成为了最好的朋友，小王子也学会了像玫瑰公主一样用善良的心对待每一个人。玫瑰公主的花园变得更加繁盛，因为爱和善良的种子已经在每个人心中生根发芽。'
+                        ]
+                    }
+                };
+
+                // 获取匹配的故事或生成自定义故事
+                let story = storyTemplates[theme] || this.generateCustomStory(theme);
+                
+                // 模拟AI生成的延迟
+                await this.delay(2000 + Math.random() * 1000);
+                
+                return story;
+            }
+
+            generateCustomStory(theme) {
+                const titles = [
+                    `${theme}的奇妙冒险`,
+                    `关于${theme}的温暖故事`,
+                    `${theme}与魔法世界`,
+                    `勇敢的${theme}成长记`,
+                    `${theme}的友谊之旅`,
+                    `善良${theme}的美好愿望`
+                ];
+
+                const paragraphs = [
+                    `从前，在一个充满奇迹的地方，有一个关于${theme}的动人故事。故事的主人公是一个善良勇敢的小朋友，他即将开始一段改变人生的奇妙旅程，去发现${theme}的真正意义。`,
+                    
+                    `这个小朋友对${theme}充满了好奇心和向往。有一天，他下定决心要走出舒适的家，去探索这个充满无限可能的广阔世界，寻找属于自己的答案和梦想。每一步都充满了新的发现和惊喜。`,
+                    
+                    `在充满挑战的旅途中，小朋友遇到了各种各样有趣的朋友和意想不到的困难。每一次经历都像一堂珍贵的人生课程，让他学到了新的知识，也让他的心灵变得更加勇敢、智慧和宽容。`,
+                    
+                    `通过与${theme}相关的种种精彩冒险和感人经历，小朋友不仅帮助了许多需要帮助的人，解决了他们的困难，也在这个过程中发现了自己内心深处隐藏的巨大力量和无限价值。`,
+                    
+                    `在经历了重重考验和成长后，小朋友终于深刻理解了${theme}的真正含义和珍贵价值。他带着满心的收获、美好的回忆和新结识的朋友们回到了家，但他的心境已经变得更加宽广、温暖和充满希望。`,
+                    
+                    `这个关于${theme}的美丽故事告诉我们一个永恒的道理：每个人都拥有自己独特而珍贵的价值，只要我们保持善良纯真的心和勇敢坚持的精神，就一定能够创造属于自己的精彩人生，让世界因为我们的存在而变得更加美好。`
+                ];
+
+                return {
+                    title: titles[Math.floor(Math.random() * titles.length)],
+                    paragraphs
+                };
+            }
+
+            async generateImages(story) {
+                if (!story) return;
+                
+                story.images = [];
+                
+                // 高质量图片库，根据内容匹配
+                const imageLibrary = {
+                    // 动物相关
+                    '兔子': [
+                        'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=400&h=300&fit=crop&q=80'
+                    ],
+                    '森林': [
+                        'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&q=80'
+                    ],
+                    '友谊': [
+                        'https://images.unsplash.com/photo-1529903475582-154eb4c7ee9a?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1523800503107-5bc3ba2a6f81?w=400&h=300&fit=crop&q=80'
+                    ],
+                    '海底': [
+                        'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=300&fit=crop&q=80'
+                    ],
+                    '太空': [
+                        'https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=300&fit=crop&q=80'
+                    ],
+                    '公主': [
+                        'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&q=80'
+                    ],
+                    '花园': [
+                        'https://images.unsplash.com/photo-1492571350019-22de08371fd3?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop&q=80'
+                    ],
+                    '冒险': [
+                        'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=400&h=300&fit=crop&q=80'
+                    ]
+                };
+
+                // 默认图片
+                const defaultImages = [
+                    'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1529655683826-aba9b3e77383?w=400&h=300&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&q=80'
+                ];
+
+                for (let i = 0; i < story.paragraphs.length; i++) {
+                    let selectedImages = defaultImages;
+                    
+                    // 根据段落内容和故事标题选择合适的图片
+                    const content = (story.paragraphs[i] + ' ' + story.title).toLowerCase();
+                    
+                    for (const [keyword, images] of Object.entries(imageLibrary)) {
+                        if (content.includes(keyword) || content.includes(keyword.toLowerCase())) {
+                            selectedImages = images;
+                            break;
+                        }
+                    }
+                    
+                    // 选择图片并添加到故事中
+                    const imageIndex = i % selectedImages.length;
+                    story.images.push(selectedImages[imageIndex]);
+                    
+                    await this.delay(200 + Math.random() * 300); // 模拟生成延迟
+                }
+
+                console.log('🎨 故事插画生成完成，共', story.images.length, '张');
+            }
+
+            animateLoadingSteps() {
+                const steps = ['step1', 'step2', 'step3'];
+                let currentStep = 0;
+
+                this.loadingInterval = setInterval(() => {
+                    if (currentStep < steps.length) {
+                        const stepElement = document.getElementById(steps[currentStep]);
+                        if (stepElement) {
+                            stepElement.classList.add('active');
+                        }
+                        currentStep++;
+                    } else {
+                        clearInterval(this.loadingInterval);
+                        this.loadingInterval = null;
+                    }
+                }, 800);
+            }
+
+            showStoryPage() {
+                this.showPage('storyPage');
+                this.updateStoryDisplay();
+            }
+
+            updateStoryDisplay() {
+                if (!this.currentStory) return;
+
+                const storyTitle = document.getElementById('storyTitle');
+                const currentPage = document.getElementById('currentPage');
+                const totalPages = document.getElementById('totalPages');
+                const storyParagraph = document.getElementById('storyParagraph');
+
+                if (storyTitle) storyTitle.textContent = this.currentStory.title;
+                if (currentPage) currentPage.textContent = this.currentPageIndex + 1;
+                if (totalPages) totalPages.textContent = this.currentStory.paragraphs.length;
+                if (storyParagraph) storyParagraph.textContent = this.currentStory.paragraphs[this.currentPageIndex];
+                
+                // 更新图片
+                this.updateStoryImage();
+                
+                // 更新导航按钮状态
+                const prevBtn = document.getElementById('prevBtn');
+                const nextBtn = document.getElementById('nextBtn');
+                
+                if (prevBtn) prevBtn.disabled = this.currentPageIndex === 0;
+                if (nextBtn) {
+                    nextBtn.textContent = this.currentPageIndex === this.currentStory.paragraphs.length - 1 ? '结束 →' : '下一页 →';
+                }
+                
+                // 停止当前播放
+                this.stopPlayback();
+            }
+
+            updateStoryImage() {
+                const img = document.getElementById('storyImg');
+                const loading = document.getElementById('imageLoading');
+                
+                if (!img || !loading || !this.currentStory?.images) return;
+                
+                const imageUrl = this.currentStory.images[this.currentPageIndex];
+                if (imageUrl) {
+                    loading.style.display = 'flex';
+                    img.style.display = 'none';
+                    
+                    img.onload = () => {
+                        loading.style.display = 'none';
+                        img.style.display = 'block';
+                    };
+                    
+                    img.onerror = () => {
+                        loading.style.display = 'none';
+                        img.style.display = 'block';
+                        // 使用默认占位图片
+                        img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiNGNUY1RjUiLz48cGF0aCBkPSJNMTc1IDEyNUwyMjUgMTc1TDI3NSAxMjVIMzI1TDI3NSA3NUwyMjUgMTI1TDE3NSA3NUgxMjVMMTc1IDEyNVoiIGZpbGw9IiNEMUQxRDEiLz48L3N2Zz4=';
+                    };
+                    
+                    img.src = imageUrl;
+                    img.alt = `故事插画 - 第${this.currentPageIndex + 1}页`;
+                }
+            }
+
+            previousPage() {
+                if (this.currentPageIndex > 0) {
+                    this.currentPageIndex--;
+                    this.updateStoryDisplay();
+                    this.showToast(`📖 第 ${this.currentPageIndex + 1} 页`);
+                }
+            }
+
+            nextPage() {
+                if (this.currentPageIndex < this.currentStory.paragraphs.length - 1) {
+                    this.currentPageIndex++;
+                    this.updateStoryDisplay();
+                    this.showToast(`📖 第 ${this.currentPageIndex + 1} 页`);
+                } else {
+                    // 到达最后一页，显示结束页面
+                    this.showPage('endPage');
+                    this.showToast('🎉 故事读完了！希望你喜欢');
+                }
+            }
+
+            togglePlayback() {
+                if (this.isPlaying) {
+                    this.stopPlayback();
+                } else {
+                    this.startPlayback();
+                }
+            }
+
+            startPlayback() {
+                if (!this.currentStory || !this.speechSynthesis) {
+                    this.showToast('❌ 语音功能暂不可用');
+                    return;
+                }
+
+                const text = this.currentStory.paragraphs[this.currentPageIndex];
+                const speedSelect = document.getElementById('speedSelect');
+                const speed = speedSelect ? parseFloat(speedSelect.value) : 1.0;
+
+                this.currentUtterance = new SpeechSynthesisUtterance(text);
+                this.currentUtterance.rate = speed;
+                this.currentUtterance.pitch = 1.1;
+                this.currentUtterance.volume = 1;
+
+                // 设置中文语音
+                const voices = this.speechSynthesis.getVoices();
+                const chineseVoice = voices.find(voice => 
+                    voice.lang.includes('zh') || 
+                    voice.lang.includes('CN') ||
+                    voice.name.includes('Chinese')
+                );
+                if (chineseVoice) {
+                    this.currentUtterance.voice = chineseVoice;
+                }
+
+                this.currentUtterance.onstart = () => {
+                    this.isPlaying = true;
+                    this.updatePlayButton();
+                    this.startTextHighlight(text);
+                    console.log('🎵 开始语音朗读');
+                };
+
+                this.currentUtterance.onend = () => {
+                    this.isPlaying = false;
+                    this.updatePlayButton();
+                    this.clearTextHighlight();
+                    console.log('⏹️ 语音朗读结束');
+                };
+
+                this.currentUtterance.onerror = (error) => {
+                    this.isPlaying = false;
+                    this.updatePlayButton();
+                    this.showToast('😔 语音播放出错，请重试');
+                    console.error('❌ TTS错误:', error);
+                };
+
+                try {
+                    this.speechSynthesis.speak(this.currentUtterance);
+                    this.showToast('🎵 开始朗读故事');
+                } catch (error) {
+                    console.error('❌ 语音播放失败:', error);
+                    this.showToast('❌ 语音功能暂不可用');
+                }
+            }
+
+            stopPlayback() {
+                if (this.speechSynthesis) {
+                    this.speechSynthesis.cancel();
+                }
+                this.isPlaying = false;
+                this.updatePlayButton();
+                this.clearTextHighlight();
+            }
+
+            updatePlayButton() {
+                const playBtn = document.getElementById('playBtn');
+                if (playBtn) {
+                    playBtn.textContent = this.isPlaying ? '⏸️' : '▶️';
+                    playBtn.title = this.isPlaying ? '暂停朗读' : '播放朗读';
+                }
+            }
+
+            startTextHighlight(text) {
+                this.clearTextHighlight();
+                
+                const paragraph = document.getElementById('storyParagraph');
+                if (!paragraph || !text) return;
+
+                const chars = text.split('');
+                let currentIndex = 0;
+                
+                const highlightInterval = setInterval(() => {
+                    if (currentIndex < chars.length && this.isPlaying) {
+                        this.highlightCharacter(paragraph, currentIndex, text);
+                        currentIndex++;
+                    } else {
+                        clearInterval(highlightInterval);
+                    }
+                }, 120); // 调整高亮速度
+                
+                this.highlightTimeout = highlightInterval;
+            }
+
+            highlightCharacter(paragraph, index, originalText) {
+                if (!paragraph || !originalText) return;
+
+                const beforeText = originalText.substring(0, index);
+                const currentChar = originalText.charAt(index);
+                const afterText = originalText.substring(index + 1);
+                
+                paragraph.innerHTML = beforeText + 
+                                     `<span class="highlight">${currentChar}</span>` + 
+                                     afterText;
+            }
+
+            clearTextHighlight() {
+                if (this.highlightTimeout) {
+                    clearInterval(this.highlightTimeout);
+                    this.highlightTimeout = null;
+                }
+                
+                const paragraph = document.getElementById('storyParagraph');
+                if (paragraph && this.currentStory) {
+                    paragraph.textContent = this.currentStory.paragraphs[this.currentPageIndex] || '';
+                }
+            }
+
+            saveStory() {
+                if (!this.currentStory) {
+                    this.showToast('❌ 没有故事可以保存');
+                    return;
+                }
+                
+                try {
+                    const savedStories = JSON.parse(localStorage.getItem('savedStories') || '[]');
+                    const storyToSave = {
+                        ...this.currentStory,
+                        savedAt: new Date().toISOString(),
+                        id: Date.now()
+                    };
+                    
+                    savedStories.push(storyToSave);
+                    localStorage.setItem('savedStories', JSON.stringify(savedStories));
+                    
+                    this.showToast('💾 故事已保存到本地存储！');
+                    console.log('💾 故事保存成功:', storyToSave.title);
+                } catch (error) {
+                    console.error('❌ 保存故事失败:', error);
+                    this.showToast('😔 保存失败，请检查浏览器设置');
+                }
+            }
+
+            shareStory() {
+                if (!this.currentStory) {
+                    this.showToast('❌ 没有故事可以分享');
+                    return;
+                }
+                
+                const shareText = `我在AI绘本创建了一个精彩的故事：《${this.currentStory.title}》\n\n这是一个专为孩子设计的AI绘本创作工具，支持故事生成、插画配图和语音朗读。快来一起创作属于你的故事吧！\n\n✨ 特色功能：\n🎨 AI智能故事生成\n🖼️ 精美插画配图\n🎵 语音朗读跟读\n📱 移动端优化设计`;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: `AI绘本 - ${this.currentStory.title}`,
+                        text: shareText,
+                        url: window.location.href
+                    }).then(() => {
+                        this.showToast('📤 分享成功！');
+                    }).catch((error) => {
+                        console.log('分享取消或失败:', error);
+                        this.fallbackShare(shareText);
+                    });
+                } else {
+                    this.fallbackShare(shareText);
+                }
+            }
+
+            fallbackShare(text) {
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        this.showToast('📋 分享文案已复制到剪贴板！');
+                    }).catch(() => {
+                        this.showManualShare(text);
+                    });
+                } else {
+                    this.showManualShare(text);
+                }
+            }
+
+            showManualShare(text) {
+                // 创建临时文本区域用于复制
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    this.showToast('📋 分享文案已复制！');
+                } catch (err) {
+                    this.showToast('💡 请手动复制分享文案');
+                    console.log('分享内容:', text);
+                }
+                
+                document.body.removeChild(textArea);
+            }
+
+            goHome() {
+                this.stopPlayback();
+                this.currentStory = null;
+                this.currentPageIndex = 0;
+                
+                const storyInput = document.getElementById('storyInput');
+                if (storyInput) {
+                    storyInput.value = '';
+                    storyInput.focus();
+                }
+                
+                this.showPage('homePage');
+                this.showToast('🏠 欢迎回到首页，开始新的故事创作吧！');
+            }
+
+            showPage(pageId) {
+                // 清理加载动画
+                if (this.loadingInterval) {
+                    clearInterval(this.loadingInterval);
+                    this.loadingInterval = null;
+                }
+
+                // 重置所有步骤状态
+                document.querySelectorAll('.step').forEach(step => {
+                    step.classList.remove('active');
+                });
+
+                // 切换页面
+                document.querySelectorAll('.page').forEach(page => {
+                    page.style.display = 'none';
+                });
+                
+                const targetPage = document.getElementById(pageId);
+                if (targetPage) {
+                    targetPage.style.display = 'flex';
+                    console.log('📄 切换到页面:', pageId);
+                }
+            }
+
+            showToast(message, duration = 3000) {
+                console.log('📢', message);
+                const toast = document.getElementById('toast');
+                if (!toast) return;
+
+                toast.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, duration);
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            // 清理方法
+            destroy() {
+                this.stopPlayback();
+                if (this.loadingInterval) {
+                    clearInterval(this.loadingInterval);
+                }
+                if (this.highlightTimeout) {
+                    clearInterval(this.highlightTimeout);
+                }
+            }
+        }
+
+        // 应用初始化
+        let storyApp = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🎯 DOM内容加载完成');
+            storyApp = new StoryApp();
+        });
+
+        // 页面卸载时清理资源
+        window.addEventListener('beforeunload', () => {
+            if (storyApp) {
+                storyApp.destroy();
+            }
+        });
+
+        // 防止页面缩放和双击
+        document.addEventListener('touchstart', function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = new Date().getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+
+        // 禁用右键菜单
+        document.addEventListener('contextmenu', function(event) {
+            event.preventDefault();
+        });
+
+        // PWA 安装提示
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('💡 PWA安装提示已准备');
+        });
+
+        // 错误处理
+        window.addEventListener('error', (error) => {
+            console.error('🚨 全局错误:', error);
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('🚨 未处理的Promise错误:', event.reason);
+        });
+
+        console.log('🎉 AI绘本应用脚本加载完成');
+    </script>
+</body>
+</html>

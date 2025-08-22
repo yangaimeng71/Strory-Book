@@ -1,0 +1,1963 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🎨 AI绘本 - 儿童故事生成器</title>
+    <meta name="description" content="为3-8岁儿童设计的AI绘本创作工具，支持大模型故事生成、插画配图和语音朗读">
+    <meta name="keywords" content="AI绘本,儿童故事,语音朗读,移动端,教育,大模型">
+    
+    <!-- 添加PWA支持 -->
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQUnnu5jmnKwiLCJzaG9ydF9uYW1lIjoiQUnnu5jmnKwiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJ0aGVtZV9jb2xvciI6IiM2NjdlZWEiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2ZmZmZmZiIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBNU5pQTVOaUlnZG1WeWMybHZiajBpTVM0eElpQjRiV3h1Y3owaWFIUjBjRG92TDNkM2R5NTNNeTVoY21jdk1qQXdNQzl6ZG1jaVBnbzhZMmx5WTJ4bElHTjRQU0kwT0NJZ1kza1BTSDBPV0NJZ2NqMGlNemt1TmlJZ1ptbHNiRDBpSXpZMk4yVmxZU0lnTHo0OGRHVjRkQ0I0UFNJek5pSWdlVDBpTlRRaUlHWnZiblF0Wm1GdGFXeDVQU0pCY21saGJDSWdabTl1ZEMxemFYcGxQU0l6TUhCNElpQm1hV3hzUFNJalptWm1JaUErOEFvZ1FVa080NGEvYStlN21PZStpVGdnUEM5MFpYaDBQZzhMM04yWnoiLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XX0=">
+    
+    <style>
+        /* 基础样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        /* 页面容器 */
+        .page {
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-y: auto;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 首页样式 */
+        #homePage {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: -10px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: pulse 3s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .settings-btn:hover, .settings-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        .logo {
+            font-size: 2.8rem;
+            color: #fff;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            margin-bottom: 15px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: #fff;
+            font-size: 1.1rem;
+            opacity: 0.95;
+            font-weight: 300;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .input-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 35px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+
+        .input-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .input-section h2 {
+            color: #5a67d8;
+            margin-bottom: 25px;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        #storyInput {
+            width: 100%;
+            padding: 18px 24px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 1.05rem;
+            margin-bottom: 25px;
+            background: #fff;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        #storyInput:focus {
+            outline: none;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25);
+        }
+
+        .primary-btn {
+            width: 100%;
+            padding: 18px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+            font-family: inherit;
+        }
+
+        .primary-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .primary-btn:not(:disabled):hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .preset-themes {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(15px);
+        }
+
+        .preset-themes h3 {
+            color: #5a67d8;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .theme-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .theme-tag {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 28px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-tag:hover, .theme-tag:active {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 154, 158, 0.4);
+        }
+
+        /* 加载页样式 */
+        #loadingPage {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .loading-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 45px 35px;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .magic-wand {
+            font-size: 3.5rem;
+            animation: sparkle 2s ease-in-out infinite;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .magic-wand:after {
+            content: '✨';
+            position: absolute;
+            top: -10px;
+            right: -15px;
+            font-size: 1.5rem;
+            animation: twinkle 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(12deg) scale(1.1); }
+            75% { transform: rotate(-12deg) scale(1.1); }
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.5; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .loading-text {
+            font-size: 1.3rem;
+            color: #5a67d8;
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+
+        .loading-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .step {
+            padding: 14px 22px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            color: #5a67d8;
+            font-weight: 600;
+            opacity: 0.6;
+            transition: all 0.4s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .step.active {
+            opacity: 1;
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateX(8px);
+            border-left-color: #667eea;
+        }
+
+        /* API配置模态框 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h3 {
+            color: #5a67d8;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #a0aec0;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #5a67d8;
+            background: rgba(90, 103, 216, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .form-help {
+            font-size: 0.85rem;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        .api-status {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .api-status.success {
+            background: rgba(72, 187, 120, 0.1);
+            color: #38a169;
+            border: 1px solid rgba(72, 187, 120, 0.3);
+        }
+
+        .api-status.error {
+            background: rgba(245, 101, 101, 0.1);
+            color: #e53e3e;
+            border: 1px solid rgba(245, 101, 101, 0.3);
+        }
+
+        .api-status.warning {
+            background: rgba(237, 137, 54, 0.1);
+            color: #dd6b20;
+            border: 1px solid rgba(237, 137, 54, 0.3);
+        }
+
+        /* 故事阅读页和其他页面样式保持不变... */
+        
+        /* 故事阅读页样式 */
+        #storyPage {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 0;
+        }
+
+        .story-header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .icon-btn {
+            background: rgba(90, 103, 216, 0.1);
+            border: none;
+            font-size: 1.8rem;
+            color: #5a67d8;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .icon-btn:hover, .icon-btn:active {
+            background: rgba(90, 103, 216, 0.2);
+            transform: scale(1.1);
+        }
+
+        #storyTitle {
+            font-size: 1.3rem;
+            color: #5a67d8;
+            font-weight: 700;
+            text-align: center;
+            flex: 1;
+            margin: 0 20px;
+        }
+
+        .page-indicator {
+            font-size: 1rem;
+            color: #667eea;
+            font-weight: 600;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 8px 12px;
+            border-radius: 20px;
+        }
+
+        .story-content {
+            flex: 1;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .story-image {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+            aspect-ratio: 4/3;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(45deg, #f0f2f5 25%, #e2e8f0 50%, #f0f2f5 75%);
+            background-size: 400% 400%;
+            animation: shimmer 2s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .story-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 20px;
+            transition: all 0.5s ease-in-out;
+        }
+
+        .image-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid rgba(102, 126, 234, 0.2);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .image-loading p {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .story-text {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px 25px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(15px);
+        }
+
+        #storyParagraph {
+            font-size: 1.15rem;
+            line-height: 1.9;
+            color: #4a5568;
+            text-align: justify;
+            font-weight: 400;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            padding: 3px 6px;
+            border-radius: 6px;
+            animation: glow 1s ease-in-out infinite alternate;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(168, 237, 234, 0.4);
+        }
+
+        @keyframes glow {
+            0% { opacity: 0.8; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.02); }
+        }
+
+        .control-bar {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 18px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            min-width: 85px;
+            font-family: inherit;
+        }
+
+        .nav-btn:disabled {
+            background: #e2e8f0;
+            color: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .nav-btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .play-btn {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 20px rgba(255, 154, 158, 0.3);
+        }
+
+        .play-btn:hover, .play-btn:active {
+            transform: scale(1.15);
+            box-shadow: 0 8px 30px rgba(255, 154, 158, 0.5);
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: #5a67d8;
+            font-weight: 600;
+        }
+
+        #speedSelect {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            background: white;
+            color: #4a5568;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #speedSelect:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* 结束页样式 */
+        #endPage {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .end-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 45px 35px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(20px);
+            max-width: 420px;
+            width: 100%;
+        }
+
+        .celebration {
+            font-size: 4.5rem;
+            animation: bounce 2s ease-in-out infinite;
+            margin-bottom: 25px;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-25px); }
+            60% { transform: translateY(-12px); }
+        }
+
+        .end-container h2 {
+            color: #5a67d8;
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .end-container p {
+            color: #667eea;
+            font-size: 1.05rem;
+            margin-bottom: 35px;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .end-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .secondary-btn {
+            background: rgba(102, 126, 234, 0.1);
+            color: #5a67d8;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 14px;
+            padding: 14px 24px;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-weight: 600;
+            font-family: inherit;
+        }
+
+        .secondary-btn:hover, .secondary-btn:active {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+        }
+
+        /* Toast提示 */
+        .toast {
+            position: fixed;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            z-index: 1001;
+            opacity: 0;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-weight: 600;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-width: 90%;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(15px);
+        }
+
+        /* 隐藏其他页面 */
+        .page:not(#homePage) {
+            display: none;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .page { padding: 18px; }
+            .logo { font-size: 2.3rem; }
+            .input-section { padding: 28px 22px; }
+            .preset-themes { padding: 25px; }
+            .story-content { padding: 18px; }
+            .control-bar { padding: 20px; gap: 15px; }
+            .nav-btn { padding: 12px 15px; font-size: 0.85rem; min-width: 75px; }
+            .play-btn { width: 50px; height: 50px; font-size: 1.1rem; }
+            .audio-controls { gap: 15px; }
+            .modal-content { padding: 25px; }
+        }
+
+        @media (max-width: 360px) {
+            .theme-tags { gap: 10px; }
+            .theme-tag { padding: 10px 14px; font-size: 0.85rem; }
+            .control-bar { 
+                flex-direction: column; 
+                gap: 18px; 
+                padding: 18px;
+            }
+            .nav-btn { 
+                width: 100%; 
+                justify-content: center;
+                min-width: unset;
+            }
+            .audio-controls {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 首页 -->
+    <div class="page" id="homePage">
+        <div class="header">
+            <button id="settingsBtn" class="settings-btn" title="AI设置">⚙️</button>
+            <h1 class="logo">🎨 AI绘本</h1>
+            <p class="subtitle">为孩子创造无限想象的故事世界</p>
+        </div>
+        
+        <div class="input-section">
+            <h2>告诉我你想听什么故事？</h2>
+            <input type="text" id="storyInput" placeholder="例如：勇敢的小兔子" maxlength="50" autocomplete="off">
+            <button id="generateBtn" class="primary-btn" title="开始创作故事">
+                ✨ 开始创作故事
+            </button>
+        </div>
+        
+        <div class="preset-themes">
+            <h3>或者选择一个主题：</h3>
+            <div class="theme-tags">
+                <span class="theme-tag" data-theme="勇敢的小动物" title="点击选择">🐰 勇敢小动物</span>
+                <span class="theme-tag" data-theme="神奇的森林" title="点击选择">🌲 神奇森林</span>
+                <span class="theme-tag" data-theme="友谊的力量" title="点击选择">👫 友谊故事</span>
+                <span class="theme-tag" data-theme="奇妙的海底世界" title="点击选择">🐠 海底世界</span>
+                <span class="theme-tag" data-theme="太空大冒险" title="点击选择">🚀 太空冒险</span>
+                <span class="theme-tag" data-theme="善良的小公主" title="点击选择">👸 童话公主</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 加载页 -->
+    <div class="page" id="loadingPage">
+        <div class="loading-container">
+            <div class="magic-wand" role="img" aria-label="魔法棒">✨</div>
+            <div class="loading-text">AI正在为你创作故事...</div>
+            <div class="loading-steps">
+                <div class="step" id="step1">🤖 大模型构思故事情节</div>
+                <div class="step" id="step2">🎨 AI绘制精美插画</div>
+                <div class="step" id="step3">🎵 准备语音朗读</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 故事阅读页 -->
+    <div class="page" id="storyPage">
+        <div class="story-header">
+            <button id="backBtn" class="icon-btn" title="返回首页" aria-label="返回首页">←</button>
+            <h2 id="storyTitle">故事标题</h2>
+            <div class="page-indicator" role="status" aria-live="polite">
+                <span id="currentPage">1</span> / <span id="totalPages">1</span>
+            </div>
+        </div>
+        
+        <div class="story-content">
+            <div class="story-image">
+                <img id="storyImg" src="" alt="故事插画" style="display: none;">
+                <div class="image-loading" id="imageLoading" role="status" aria-live="polite">
+                    <div class="spinner" aria-label="加载中"></div>
+                    <p>正在绘制插画...</p>
+                </div>
+            </div>
+            
+            <div class="story-text">
+                <p id="storyParagraph" role="main"></p>
+            </div>
+        </div>
+        
+        <div class="control-bar" role="toolbar" aria-label="故事控制">
+            <button id="prevBtn" class="nav-btn" disabled title="上一页" aria-label="上一页">
+                ← 上一页
+            </button>
+            
+            <div class="audio-controls">
+                <button id="playBtn" class="play-btn" title="播放/暂停" aria-label="播放朗读">▶️</button>
+                <div class="speed-control">
+                    <label for="speedSelect">语速:</label>
+                    <select id="speedSelect" title="选择朗读语速">
+                        <option value="0.8">慢</option>
+                        <option value="1.0" selected>正常</option>
+                        <option value="1.2">快</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button id="nextBtn" class="nav-btn" title="下一页" aria-label="下一页">
+                下一页 →
+            </button>
+        </div>
+    </div>
+    
+    <!-- 结束页 -->
+    <div class="page" id="endPage">
+        <div class="end-container">
+            <div class="celebration" role="img" aria-label="庆祝">🎉</div>
+            <h2>故事结束啦！</h2>
+            <p>希望你喜欢这个美妙的故事～</p>
+            
+            <div class="end-actions">
+                <button id="newStoryBtn" class="primary-btn" title="创作新故事">
+                    ✨ 再来一个故事
+                </button>
+                <button id="saveStoryBtn" class="secondary-btn" title="保存到本地">
+                    📖 保存故事
+                </button>
+                <button id="shareStoryBtn" class="secondary-btn" title="分享给朋友">
+                    📤 分享绘本
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- API配置模态框 -->
+    <div id="apiConfigModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🤖 AI大模型配置</h3>
+                <button id="closeApiConfigBtn" class="close-btn">×</button>
+            </div>
+            
+            <div id="apiStatus" class="api-status warning">
+                ⚠️ 请配置AI接口以启用智能故事生成功能
+            </div>
+            
+            <form id="apiConfigForm">
+                <div class="form-group">
+                    <label for="apiUrl">API 接口地址</label>
+                    <input type="url" id="apiUrl" value="https://ark.cn-beijing.volces.com/api/v3/chat/completions" placeholder="https://api.example.com/v1/chat/completions">
+                    <div class="form-help">填入您的大模型API接口地址</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="apiKey">API 密钥</label>
+                    <input type="password" id="apiKey" value="893b9f2c-3b3c-4943-a482-5ab6dde65007" placeholder="sk-...">
+                    <div class="form-help">您的API访问密钥，将安全存储在本地</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="modelName">模型名称</label>
+                    <input type="text" id="modelName" value="doubao-1-5-pro-32k-250115" placeholder="gpt-3.5-turbo">
+                    <div class="form-help">使用的大模型名称</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="systemPrompt">故事生成提示词</label>
+                    <textarea id="systemPrompt" placeholder="请为儿童创作故事...">你是一位专业的儿童故事作家，擅长为3-8岁的孩子创作温馨、有趣、富有教育意义的故事。请根据用户提供的主题，创作一个完整的儿童故事。
+
+要求：
+1. 故事要分为6个段落，每个段落100-150字
+2. 语言要简单易懂，适合儿童理解
+3. 情节要生动有趣，富有想象力
+4. 要传递正面的价值观，如勇敢、友谊、善良等
+5. 避免任何可能吓到孩子的内容
+6. 结尾要温暖积极
+
+请直接返回故事内容，格式如下：
+标题：[故事标题]
+
+第一段：[内容]
+第二段：[内容]
+第三段：[内容]
+第四段：[内容]
+第五段：[内容]
+第六段：[内容]</textarea>
+                    <div class="form-help">定制AI生成故事的风格和要求</div>
+                </div>
+                
+                <div class="form-group">
+                    <button type="button" id="testApiBtn" class="secondary-btn">
+                        🧪 测试连接
+                    </button>
+                    <button type="submit" class="primary-btn">
+                        💾 保存配置
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast提示 -->
+    <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+    
+    <script>
+        'use strict';
+
+        // AI绘本应用主类
+        class StoryApp {
+            constructor() {
+                this.currentStory = null;
+                this.currentPageIndex = 0;
+                this.isPlaying = false;
+                this.speechSynthesis = window.speechSynthesis;
+                this.currentUtterance = null;
+                this.highlightTimeout = null;
+                this.loadingInterval = null;
+                
+                // API配置
+                this.apiConfig = {
+                    url: 'https://ark.cn-beijing.volces.com/api/v3/chat/completions',
+                    key: '893b9f2c-3b3c-4943-a482-5ab6dde65007',
+                    model: 'doubao-1-5-pro-32k-250115',
+                    systemPrompt: '你是一位专业的儿童故事作家，擅长为3-8岁的孩子创作温馨、有趣、富有教育意义的故事。请根据用户提供的主题，创作一个完整的儿童故事。\n\n要求：\n1. 故事要分为6个段落，每个段落100-150字\n2. 语言要简单易懂，适合儿童理解\n3. 情节要生动有趣，富有想象力\n4. 要传递正面的价值观，如勇敢、友谊、善良等\n5. 避免任何可能吓到孩子的内容\n6. 结尾要温暖积极\n\n请直接返回故事内容，格式如下：\n标题：[故事标题]\n\n第一段：[内容]\n第二段：[内容]\n第三段：[内容]\n第四段：[内容]\n第五段：[内容]\n第六段：[内容]'
+                };
+                
+                this.init();
+            }
+
+            init() {
+                console.log('🎨 AI绘本应用启动 v3.0 - 大模型版');
+                try {
+                    this.loadApiConfig();
+                    this.bindEvents();
+                    this.showPage('homePage');
+                    this.showToast('✨ 欢迎使用AI绘本！已集成大模型故事生成');
+                    this.preloadVoices();
+                    this.updateApiStatus();
+                } catch (error) {
+                    console.error('❌ 应用初始化失败:', error);
+                    this.showToast('应用加载出错，请刷新页面重试');
+                }
+            }
+
+            loadApiConfig() {
+                try {
+                    const saved = localStorage.getItem('aiStorybook_apiConfig');
+                    if (saved) {
+                        this.apiConfig = { ...this.apiConfig, ...JSON.parse(saved) };
+                        console.log('📥 已加载API配置');
+                    }
+                } catch (error) {
+                    console.error('❌ 加载API配置失败:', error);
+                }
+            }
+
+            saveApiConfig() {
+                try {
+                    localStorage.setItem('aiStorybook_apiConfig', JSON.stringify(this.apiConfig));
+                    console.log('💾 API配置已保存');
+                } catch (error) {
+                    console.error('❌ 保存API配置失败:', error);
+                }
+            }
+
+            updateApiStatus() {
+                const statusEl = document.getElementById('apiStatus');
+                if (!statusEl) return;
+
+                if (this.apiConfig.key && this.apiConfig.url) {
+                    statusEl.className = 'api-status success';
+                    statusEl.textContent = '✅ AI接口已配置，可以使用智能故事生成功能';
+                } else {
+                    statusEl.className = 'api-status warning';
+                    statusEl.textContent = '⚠️ 请配置AI接口以启用智能故事生成功能';
+                }
+            }
+
+            preloadVoices() {
+                if (this.speechSynthesis) {
+                    this.speechSynthesis.getVoices();
+                    this.speechSynthesis.onvoiceschanged = () => {
+                        console.log('🎵 语音库加载完成');
+                    };
+                }
+            }
+
+            bindEvents() {
+                // 首页事件
+                const generateBtn = document.getElementById('generateBtn');
+                const storyInput = document.getElementById('storyInput');
+                
+                if (generateBtn) {
+                    generateBtn.addEventListener('click', () => this.generateStory());
+                }
+
+                if (storyInput) {
+                    storyInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            this.generateStory();
+                        }
+                    });
+
+                    storyInput.addEventListener('focus', () => {
+                        storyInput.select();
+                    });
+                }
+
+                // 主题标签点击
+                document.querySelectorAll('.theme-tag').forEach(tag => {
+                    tag.addEventListener('click', () => {
+                        const theme = tag.dataset.theme;
+                        if (storyInput) storyInput.value = theme;
+                        this.generateStory();
+                    });
+                });
+
+                // 故事页面事件
+                const backBtn = document.getElementById('backBtn');
+                if (backBtn) {
+                    backBtn.addEventListener('click', () => this.goHome());
+                }
+
+                const prevBtn = document.getElementById('prevBtn');
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', () => this.previousPage());
+                }
+
+                const nextBtn = document.getElementById('nextBtn');
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', () => this.nextPage());
+                }
+
+                const playBtn = document.getElementById('playBtn');
+                if (playBtn) {
+                    playBtn.addEventListener('click', () => this.togglePlayback());
+                }
+
+                const speedSelect = document.getElementById('speedSelect');
+                if (speedSelect) {
+                    speedSelect.addEventListener('change', () => this.stopPlayback());
+                }
+
+                // 结束页面事件
+                const newStoryBtn = document.getElementById('newStoryBtn');
+                if (newStoryBtn) {
+                    newStoryBtn.addEventListener('click', () => this.goHome());
+                }
+
+                const saveStoryBtn = document.getElementById('saveStoryBtn');
+                if (saveStoryBtn) {
+                    saveStoryBtn.addEventListener('click', () => this.saveStory());
+                }
+
+                const shareStoryBtn = document.getElementById('shareStoryBtn');
+                if (shareStoryBtn) {
+                    shareStoryBtn.addEventListener('click', () => this.shareStory());
+                }
+
+                // 设置按钮 - 打开API配置
+                const settingsBtn = document.getElementById('settingsBtn');
+                if (settingsBtn) {
+                    settingsBtn.addEventListener('click', () => this.showApiConfig());
+                }
+
+                // API配置模态框事件
+                this.bindApiConfigEvents();
+
+                // 键盘快捷键
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        this.stopPlayback();
+                        this.hideApiConfig();
+                    }
+                });
+
+                console.log('✅ 所有事件监听器已绑定');
+            }
+
+            bindApiConfigEvents() {
+                const modal = document.getElementById('apiConfigModal');
+                const closeBtn = document.getElementById('closeApiConfigBtn');
+                const form = document.getElementById('apiConfigForm');
+                const testBtn = document.getElementById('testApiBtn');
+
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', () => this.hideApiConfig());
+                }
+
+                if (modal) {
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            this.hideApiConfig();
+                        }
+                    });
+                }
+
+                if (form) {
+                    form.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.saveApiConfigFromForm();
+                    });
+                }
+
+                if (testBtn) {
+                    testBtn.addEventListener('click', () => this.testApiConnection());
+                }
+            }
+
+            showApiConfig() {
+                const modal = document.getElementById('apiConfigModal');
+                if (!modal) return;
+
+                // 填充当前配置
+                document.getElementById('apiUrl').value = this.apiConfig.url || '';
+                document.getElementById('apiKey').value = this.apiConfig.key || '';
+                document.getElementById('modelName').value = this.apiConfig.model || '';
+                document.getElementById('systemPrompt').value = this.apiConfig.systemPrompt || '';
+
+                modal.style.display = 'flex';
+                this.updateApiStatus();
+            }
+
+            hideApiConfig() {
+                const modal = document.getElementById('apiConfigModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            }
+
+            saveApiConfigFromForm() {
+                this.apiConfig = {
+                    url: document.getElementById('apiUrl').value.trim(),
+                    key: document.getElementById('apiKey').value.trim(),
+                    model: document.getElementById('modelName').value.trim(),
+                    systemPrompt: document.getElementById('systemPrompt').value.trim()
+                };
+
+                this.saveApiConfig();
+                this.updateApiStatus();
+                this.hideApiConfig();
+                this.showToast('💾 API配置已保存');
+            }
+
+            async testApiConnection() {
+                const testBtn = document.getElementById('testApiBtn');
+                if (!testBtn) return;
+
+                testBtn.disabled = true;
+                testBtn.textContent = '🧪 测试中...';
+
+                try {
+                    const tempConfig = {
+                        url: document.getElementById('apiUrl').value.trim(),
+                        key: document.getElementById('apiKey').value.trim(),
+                        model: document.getElementById('modelName').value.trim(),
+                        systemPrompt: document.getElementById('systemPrompt').value.trim()
+                    };
+
+                    const response = await this.callAIAPI('测试连接', tempConfig);
+                    
+                    if (response) {
+                        this.showToast('✅ API连接测试成功！');
+                        const statusEl = document.getElementById('apiStatus');
+                        if (statusEl) {
+                            statusEl.className = 'api-status success';
+                            statusEl.textContent = '✅ API连接测试成功，可以正常使用';
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ API测试失败:', error);
+                    this.showToast('❌ API连接测试失败：' + error.message);
+                    const statusEl = document.getElementById('apiStatus');
+                    if (statusEl) {
+                        statusEl.className = 'api-status error';
+                        statusEl.textContent = '❌ API连接测试失败，请检查配置';
+                    }
+                } finally {
+                    testBtn.disabled = false;
+                    testBtn.textContent = '🧪 测试连接';
+                }
+            }
+
+            async generateStory() {
+                const storyInput = document.getElementById('storyInput');
+                const generateBtn = document.getElementById('generateBtn');
+                const input = storyInput ? storyInput.value.trim() : '';
+                
+                if (!input) {
+                    this.showToast('❗ 请输入故事主题或选择一个预设主题');
+                    if (storyInput) storyInput.focus();
+                    return;
+                }
+
+                // 检查API配置
+                if (!this.apiConfig.key || !this.apiConfig.url) {
+                    this.showToast('⚠️ 请先配置AI接口才能生成故事');
+                    this.showApiConfig();
+                    return;
+                }
+
+                console.log('🚀 开始AI故事生成:', input);
+                
+                // 禁用生成按钮
+                if (generateBtn) {
+                    generateBtn.disabled = true;
+                    generateBtn.textContent = '🤖 AI创作中...';
+                }
+
+                this.showPage('loadingPage');
+                this.animateLoadingSteps();
+
+                try {
+                    // 使用大模型生成故事内容
+                    const story = await this.createStoryWithAI(input);
+                    this.currentStory = story;
+                    this.currentPageIndex = 0;
+
+                    // 生成插画
+                    await this.generateImages(story);
+
+                    this.showStoryPage();
+                    console.log('✨ AI故事生成完成:', story.title);
+                    this.showToast('🎉 AI故事创作完成！可以开始阅读了');
+                } catch (error) {
+                    console.error('❌ AI故事生成失败:', error);
+                    this.showToast('😔 AI故事生成失败：' + error.message);
+                    this.showPage('homePage');
+                } finally {
+                    // 恢复生成按钮
+                    if (generateBtn) {
+                        generateBtn.disabled = false;
+                        generateBtn.textContent = '✨ 开始创作故事';
+                    }
+                }
+            }
+
+            async createStoryWithAI(theme) {
+                console.log('🤖 调用大模型生成故事...');
+                
+                try {
+                    const aiResponse = await this.callAIAPI(theme);
+                    const story = this.parseAIStoryResponse(aiResponse, theme);
+                    
+                    if (!story.title || !story.paragraphs || story.paragraphs.length === 0) {
+                        throw new Error('AI返回的故事格式不正确');
+                    }
+                    
+                    return story;
+                } catch (error) {
+                    console.error('❌ AI故事生成失败，使用备用方案:', error);
+                    // 如果API调用失败，使用预设模板作为备用
+                    return this.createFallbackStory(theme);
+                }
+            }
+
+            async callAIAPI(userMessage, config = null) {
+                const apiConfig = config || this.apiConfig;
+                
+                const requestBody = {
+                    model: apiConfig.model,
+                    messages: [
+                        {
+                            role: "system",
+                            content: apiConfig.systemPrompt
+                        },
+                        {
+                            role: "user",
+                            content: `请为主题"${userMessage}"创作一个儿童故事。`
+                        }
+                    ],
+                    temperature: 0.8,
+                    max_tokens: 2000
+                };
+
+                console.log('📡 发送API请求:', {
+                    url: apiConfig.url,
+                    model: apiConfig.model,
+                    theme: userMessage
+                });
+
+                const response = await fetch(apiConfig.url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiConfig.key}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API请求失败 (${response.status}): ${errorText}`);
+                }
+
+                const data = await response.json();
+                console.log('📥 收到API响应:', data);
+
+                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                    throw new Error('API响应格式不正确');
+                }
+
+                return data.choices[0].message.content;
+            }
+
+            parseAIStoryResponse(aiResponse, theme) {
+                console.log('📝 解析AI故事响应...');
+                
+                try {
+                    // 提取标题
+                    let title = theme; // 默认标题
+                    const titleMatch = aiResponse.match(/标题[：:]\s*(.+)/);
+                    if (titleMatch) {
+                        title = titleMatch[1].trim();
+                    }
+
+                    // 提取段落
+                    const paragraphs = [];
+                    const paragraphRegex = /第[一二三四五六七八九十\d]+段[：:]\s*(.+?)(?=第[一二三四五六七八九十\d]+段[：:]|$)/gs;
+                    let match;
+                    
+                    while ((match = paragraphRegex.exec(aiResponse)) !== null) {
+                        const paragraph = match[1].trim();
+                        if (paragraph) {
+                            paragraphs.push(paragraph);
+                        }
+                    }
+
+                    // 如果没有找到标准格式，尝试按段落分割
+                    if (paragraphs.length === 0) {
+                        const lines = aiResponse.split('\n').filter(line => line.trim() && !line.includes('标题'));
+                        for (const line of lines) {
+                            const cleaned = line.trim();
+                            if (cleaned.length > 50) { // 过滤太短的行
+                                paragraphs.push(cleaned);
+                            }
+                        }
+                    }
+
+                    // 确保至少有4个段落
+                    if (paragraphs.length < 4) {
+                        console.warn('⚠️ AI生成的段落数量不足，使用备用方案');
+                        return this.createFallbackStory(theme);
+                    }
+
+                    console.log('✅ 故事解析完成:', { title, paragraphs: paragraphs.length });
+                    
+                    return {
+                        title,
+                        paragraphs: paragraphs.slice(0, 8), // 最多8个段落
+                        source: 'ai-generated'
+                    };
+                } catch (error) {
+                    console.error('❌ 解析AI响应失败:', error);
+                    throw new Error('解析AI故事失败');
+                }
+            }
+
+            createFallbackStory(theme) {
+                console.log('📚 使用预设故事模板');
+                
+                const fallbackStories = {
+                    '勇敢的小动物': {
+                        title: '勇敢的小兔子贝贝',
+                        paragraphs: [
+                            '在一片美丽的森林里，住着一只名叫贝贝的小兔子。贝贝有着雪白的毛发和红宝石般的眼睛，但她总是很胆小，不敢独自出门探险。',
+                            '一天，森林里传来了求救声。原来是小松鼠奇奇掉进了深深的山洞里，大家都不知道该怎么办。动物们围在洞口，焦急地讨论着救援方案。',
+                            '贝贝看到大家都很着急，心里也很难过。虽然她很害怕，但她想起了妈妈说过的话："真正的勇敢不是不害怕，而是即使害怕也要去帮助别人。"',
+                            '贝贝深深吸了一口气，勇敢地跳进了山洞。洞里很黑，她的心怦怦直跳，但她想着奇奇需要帮助，就一步一步小心地往下走。',
+                            '终于，贝贝找到了受伤的奇奇。她温柔地安慰奇奇，然后背着他慢慢爬出了山洞。当大家看到贝贝安全地救出奇奇时，都为她鼓掌喝彩。',
+                            '从那天起，贝贝再也不是那只胆小的小兔子了。她学会了勇敢，也明白了帮助别人会让自己变得更加强大和快乐。'
+                        ]
+                    }
+                };
+
+                // 返回匹配的故事或生成简单故事
+                return fallbackStories[theme] || {
+                    title: `${theme}的故事`,
+                    paragraphs: [
+                        `这是一个关于${theme}的美妙故事。在一个充满奇迹的世界里，我们的主人公即将开始一段难忘的冒险旅程。`,
+                        `主人公遇到了各种有趣的挑战和朋友，每一次经历都让他学到了珍贵的人生经验，变得更加勇敢和智慧。`,
+                        `通过努力和坚持，主人公不仅帮助了许多需要帮助的人，也发现了自己内心深处的力量和美好品质。`,
+                        `最终，这个关于${theme}的故事告诉我们，只要保持善良的心和勇敢的精神，就能创造属于自己的精彩人生。`
+                    ],
+                    source: 'fallback'
+                };
+            }
+
+            async generateImages(story) {
+                if (!story) return;
+                
+                story.images = [];
+                
+                // 高质量图片库，根据内容匹配
+                const imageLibrary = {
+                    '兔子': [
+                        'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=400&h=300&fit=crop&q=80'
+                    ],
+                    '森林': [
+                        'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&q=80'
+                    ],
+                    '友谊': [
+                        'https://images.unsplash.com/photo-1529903475582-154eb4c7ee9a?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1523800503107-5bc3ba2a6f81?w=400&h=300&fit=crop&q=80'
+                    ],
+                    '海底': [
+                        'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=300&fit=crop&q=80'
+                    ],
+                    '太空': [
+                        'https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=300&fit=crop&q=80'
+                    ],
+                    '公主': [
+                        'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&q=80'
+                    ],
+                    '花园': [
+                        'https://images.unsplash.com/photo-1492571350019-22de08371fd3?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop&q=80'
+                    ],
+                    '冒险': [
+                        'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=300&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=400&h=300&fit=crop&q=80'
+                    ]
+                };
+
+                // 默认图片
+                const defaultImages = [
+                    'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1529655683826-aba9b3e77383?w=400&h=300&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&q=80'
+                ];
+
+                for (let i = 0; i < story.paragraphs.length; i++) {
+                    let selectedImages = defaultImages;
+                    
+                    // 根据段落内容和故事标题选择合适的图片
+                    const content = (story.paragraphs[i] + ' ' + story.title).toLowerCase();
+                    
+                    for (const [keyword, images] of Object.entries(imageLibrary)) {
+                        if (content.includes(keyword) || content.includes(keyword.toLowerCase())) {
+                            selectedImages = images;
+                            break;
+                        }
+                    }
+                    
+                    // 选择图片并添加到故事中
+                    const imageIndex = i % selectedImages.length;
+                    story.images.push(selectedImages[imageIndex]);
+                    
+                    await this.delay(200 + Math.random() * 300);
+                }
+
+                console.log('🎨 故事插画生成完成，共', story.images.length, '张');
+            }
+
+            animateLoadingSteps() {
+                const steps = ['step1', 'step2', 'step3'];
+                let currentStep = 0;
+
+                this.loadingInterval = setInterval(() => {
+                    if (currentStep < steps.length) {
+                        const stepElement = document.getElementById(steps[currentStep]);
+                        if (stepElement) {
+                            stepElement.classList.add('active');
+                        }
+                        currentStep++;
+                    } else {
+                        clearInterval(this.loadingInterval);
+                        this.loadingInterval = null;
+                    }
+                }, 1000);
+            }
+
+            showStoryPage() {
+                this.showPage('storyPage');
+                this.updateStoryDisplay();
+            }
+
+            updateStoryDisplay() {
+                if (!this.currentStory) return;
+
+                const storyTitle = document.getElementById('storyTitle');
+                const currentPage = document.getElementById('currentPage');
+                const totalPages = document.getElementById('totalPages');
+                const storyParagraph = document.getElementById('storyParagraph');
+
+                if (storyTitle) storyTitle.textContent = this.currentStory.title;
+                if (currentPage) currentPage.textContent = this.currentPageIndex + 1;
+                if (totalPages) totalPages.textContent = this.currentStory.paragraphs.length;
+                if (storyParagraph) storyParagraph.textContent = this.currentStory.paragraphs[this.currentPageIndex];
+                
+                // 更新图片
+                this.updateStoryImage();
+                
+                // 更新导航按钮状态
+                const prevBtn = document.getElementById('prevBtn');
+                const nextBtn = document.getElementById('nextBtn');
+                
+                if (prevBtn) prevBtn.disabled = this.currentPageIndex === 0;
+                if (nextBtn) {
+                    nextBtn.textContent = this.currentPageIndex === this.currentStory.paragraphs.length - 1 ? '结束 →' : '下一页 →';
+                }
+                
+                // 停止当前播放
+                this.stopPlayback();
+            }
+
+            updateStoryImage() {
+                const img = document.getElementById('storyImg');
+                const loading = document.getElementById('imageLoading');
+                
+                if (!img || !loading || !this.currentStory?.images) return;
+                
+                const imageUrl = this.currentStory.images[this.currentPageIndex];
+                if (imageUrl) {
+                    loading.style.display = 'flex';
+                    img.style.display = 'none';
+                    
+                    img.onload = () => {
+                        loading.style.display = 'none';
+                        img.style.display = 'block';
+                    };
+                    
+                    img.onerror = () => {
+                        loading.style.display = 'none';
+                        img.style.display = 'block';
+                        img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiNGNUY1RjUiLz48cGF0aCBkPSJNMTc1IDEyNUwyMjUgMTc1TDI3NSAxMjVIMzI1TDI3NSA3NUwyMjUgMTI1TDE3NSA3NUgxMjVMMTc1IDEyNVoiIGZpbGw9IiNEMUQxRDEiLz48L3N2Zz4=';
+                    };
+                    
+                    img.src = imageUrl;
+                    img.alt = `AI生成故事插画 - 第${this.currentPageIndex + 1}页`;
+                }
+            }
+
+            previousPage() {
+                if (this.currentPageIndex > 0) {
+                    this.currentPageIndex--;
+                    this.updateStoryDisplay();
+                    this.showToast(`📖 第 ${this.currentPageIndex + 1} 页`);
+                }
+            }
+
+            nextPage() {
+                if (this.currentPageIndex < this.currentStory.paragraphs.length - 1) {
+                    this.currentPageIndex++;
+                    this.updateStoryDisplay();
+                    this.showToast(`📖 第 ${this.currentPageIndex + 1} 页`);
+                } else {
+                    this.showPage('endPage');
+                    this.showToast('🎉 AI故事读完了！希望你喜欢');
+                }
+            }
+
+            togglePlayback() {
+                if (this.isPlaying) {
+                    this.stopPlayback();
+                } else {
+                    this.startPlayback();
+                }
+            }
+
+            startPlayback() {
+                if (!this.currentStory || !this.speechSynthesis) {
+                    this.showToast('❌ 语音功能暂不可用');
+                    return;
+                }
+
+                const text = this.currentStory.paragraphs[this.currentPageIndex];
+                const speedSelect = document.getElementById('speedSelect');
+                const speed = speedSelect ? parseFloat(speedSelect.value) : 1.0;
+
+                this.currentUtterance = new SpeechSynthesisUtterance(text);
+                this.currentUtterance.rate = speed;
+                this.currentUtterance.pitch = 1.1;
+                this.currentUtterance.volume = 1;
+
+                const voices = this.speechSynthesis.getVoices();
+                const chineseVoice = voices.find(voice => 
+                    voice.lang.includes('zh') || 
+                    voice.lang.includes('CN') ||
+                    voice.name.includes('Chinese')
+                );
+                if (chineseVoice) {
+                    this.currentUtterance.voice = chineseVoice;
+                }
+
+                this.currentUtterance.onstart = () => {
+                    this.isPlaying = true;
+                    this.updatePlayButton();
+                    this.startTextHighlight(text);
+                    console.log('🎵 开始语音朗读');
+                };
+
+                this.currentUtterance.onend = () => {
+                    this.isPlaying = false;
+                    this.updatePlayButton();
+                    this.clearTextHighlight();
+                    console.log('⏹️ 语音朗读结束');
+                };
+
+                this.currentUtterance.onerror = (error) => {
+                    this.isPlaying = false;
+                    this.updatePlayButton();
+                    this.showToast('😔 语音播放出错，请重试');
+                    console.error('❌ TTS错误:', error);
+                };
+
+                try {
+                    this.speechSynthesis.speak(this.currentUtterance);
+                    this.showToast('🎵 开始朗读AI故事');
+                } catch (error) {
+                    console.error('❌ 语音播放失败:', error);
+                    this.showToast('❌ 语音功能暂不可用');
+                }
+            }
+
+            stopPlayback() {
+                if (this.speechSynthesis) {
+                    this.speechSynthesis.cancel();
+                }
+                this.isPlaying = false;
+                this.updatePlayButton();
+                this.clearTextHighlight();
+            }
+
+            updatePlayButton() {
+                const playBtn = document.getElementById('playBtn');
+                if (playBtn) {
+                    playBtn.textContent = this.isPlaying ? '⏸️' : '▶️';
+                    playBtn.title = this.isPlaying ? '暂停朗读' : '播放朗读';
+                }
+            }
+
+            startTextHighlight(text) {
+                this.clearTextHighlight();
+                
+                const paragraph = document.getElementById('storyParagraph');
+                if (!paragraph || !text) return;
+
+                const chars = text.split('');
+                let currentIndex = 0;
+                
+                const highlightInterval = setInterval(() => {
+                    if (currentIndex < chars.length && this.isPlaying) {
+                        this.highlightCharacter(paragraph, currentIndex, text);
+                        currentIndex++;
+                    } else {
+                        clearInterval(highlightInterval);
+                    }
+                }, 120);
+                
+                this.highlightTimeout = highlightInterval;
+            }
+
+            highlightCharacter(paragraph, index, originalText) {
+                if (!paragraph || !originalText) return;
+
+                const beforeText = originalText.substring(0, index);
+                const currentChar = originalText.charAt(index);
+                const afterText = originalText.substring(index + 1);
+                
+                paragraph.innerHTML = beforeText + 
+                                     `<span class="highlight">${currentChar}</span>` + 
+                                     afterText;
+            }
+
+            clearTextHighlight() {
+                if (this.highlightTimeout) {
+                    clearInterval(this.highlightTimeout);
+                    this.highlightTimeout = null;
+                }
+                
+                const paragraph = document.getElementById('storyParagraph');
+                if (paragraph && this.currentStory) {
+                    paragraph.textContent = this.currentStory.paragraphs[this.currentPageIndex] || '';
+                }
+            }
+
+            saveStory() {
+                if (!this.currentStory) {
+                    this.showToast('❌ 没有故事可以保存');
+                    return;
+                }
+                
+                try {
+                    const savedStories = JSON.parse(localStorage.getItem('savedStories') || '[]');
+                    const storyToSave = {
+                        ...this.currentStory,
+                        savedAt: new Date().toISOString(),
+                        id: Date.now()
+                    };
+                    
+                    savedStories.push(storyToSave);
+                    localStorage.setItem('savedStories', JSON.stringify(savedStories));
+                    
+                    const sourceText = this.currentStory.source === 'ai-generated' ? 'AI生成的' : '';
+                    this.showToast(`💾 ${sourceText}故事已保存到本地存储！`);
+                    console.log('💾 故事保存成功:', storyToSave.title);
+                } catch (error) {
+                    console.error('❌ 保存故事失败:', error);
+                    this.showToast('😔 保存失败，请检查浏览器设置');
+                }
+            }
+
+            shareStory() {
+                if (!this.currentStory) {
+                    this.showToast('❌ 没有故事可以分享');
+                    return;
+                }
+                
+                const aiLabel = this.currentStory.source === 'ai-generated' ? 'AI创作的' : '';
+                const shareText = `我在AI绘本创建了一个精彩的${aiLabel}故事：《${this.currentStory.title}》\n\n这是一个集成了大模型AI的儿童绘本创作工具，支持智能故事生成、插画配图和语音朗读。快来一起创作属于你的故事吧！\n\n✨ 特色功能：\n🤖 大模型AI智能故事创作\n🎨 精美插画自动配图\n🎵 语音朗读跟读体验\n📱 移动端完美适配\n💾 本地故事保存管理`;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: `AI绘本 - ${this.currentStory.title}`,
+                        text: shareText,
+                        url: window.location.href
+                    }).then(() => {
+                        this.showToast('📤 分享成功！');
+                    }).catch((error) => {
+                        console.log('分享取消或失败:', error);
+                        this.fallbackShare(shareText);
+                    });
+                } else {
+                    this.fallbackShare(shareText);
+                }
+            }
+
+            fallbackShare(text) {
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        this.showToast('📋 分享文案已复制到剪贴板！');
+                    }).catch(() => {
+                        this.showManualShare(text);
+                    });
+                } else {
+                    this.showManualShare(text);
+                }
+            }
+
+            showManualShare(text) {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    this.showToast('📋 分享文案已复制！');
+                } catch (err) {
+                    this.showToast('💡 请手动复制分享文案');
+                    console.log('分享内容:', text);
+                }
+                
+                document.body.removeChild(textArea);
+            }
+
+            goHome() {
+                this.stopPlayback();
+                this.currentStory = null;
+                this.currentPageIndex = 0;
+                
+                const storyInput = document.getElementById('storyInput');
+                if (storyInput) {
+                    storyInput.value = '';
+                    storyInput.focus();
+                }
+                
+                this.showPage('homePage');
+                this.showToast('🏠 欢迎回到首页，开始新的AI故事创作吧！');
+            }
+
+            showPage(pageId) {
+                if (this.loadingInterval) {
+                    clearInterval(this.loadingInterval);
+                    this.loadingInterval = null;
+                }
+
+                document.querySelectorAll('.step').forEach(step => {
+                    step.classList.remove('active');
+                });
+
+                document.querySelectorAll('.page').forEach(page => {
+                    page.style.display = 'none';
+                });
+                
+                const targetPage = document.getElementById(pageId);
+                if (targetPage) {
+                    targetPage.style.display = 'flex';
+                    console.log('📄 切换到页面:', pageId);
+                }
+            }
+
+            showToast(message, duration = 3000) {
+                console.log('📢', message);
+                const toast = document.getElementById('toast');
+                if (!toast) return;
+
+                toast.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, duration);
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            destroy() {
+                this.stopPlayback();
+                if (this.loadingInterval) {
+                    clearInterval(this.loadingInterval);
+                }
+                if (this.highlightTimeout) {
+                    clearInterval(this.highlightTimeout);
+                }
+            }
+        }
+
+        // 应用初始化
+        let storyApp = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🎯 DOM内容加载完成');
+            storyApp = new StoryApp();
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (storyApp) {
+                storyApp.destroy();
+            }
+        });
+
+        // 防止页面缩放和双击
+        document.addEventListener('touchstart', function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = new Date().getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+
+        document.addEventListener('contextmenu', function(event) {
+            event.preventDefault();
+        });
+
+        // 错误处理
+        window.addEventListener('error', (error) => {
+            console.error('🚨 全局错误:', error);
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('🚨 未处理的Promise错误:', event.reason);
+        });
+
+        console.log('🎉 AI绘本应用脚本加载完成 - 大模型版本');
+    </script>
+</body>
+</html>
